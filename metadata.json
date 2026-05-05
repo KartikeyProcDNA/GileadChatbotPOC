@@ -1,0 +1,140 @@
+{
+  "version": "1.0.0",
+  "platform": "Gilead Data Query Assistant",
+  "database": "SQLite (in-memory from Excel)",
+  "primary_key": "HCP_ID",
+  "tables": {
+    "IQVIA_OneKey": {
+      "originalName": "IQVIA-OneKey",
+      "description": "Master HCP/HCO reference data — demographics, affiliation, DNC flags",
+      "columns": ["HCP_ID","HCP_Name","NPI","Master_ID","Specialty_Code","Specialty","Status","HCP_Address","HCP_City","HCP_State","HCP_ZIP","HCO_ID","HCO_Name","HCO_Address","HCO_City","HCO_State","HCO_ZIP","Affiliation_Type","Retail","Digital_DNC_Flag","Inperson_DNC_Flag","Creditable","IC_Credit"],
+      "primary_key": "HCP_ID",
+      "foreign_keys": ["HCO_ID", "NPI"]
+    },
+    "Xponent": {
+      "originalName": "Xponent",
+      "description": "Monthly prescribing data (TRx units) by HCP and product",
+      "columns": ["NPI","HCP_ID","Product","Month","Units","Territory"],
+      "primary_key": "NPI",
+      "foreign_keys": ["HCP_ID"]
+    },
+    "Alignment": {
+      "originalName": "Alignment",
+      "description": "Geographic alignment — ZIP to Territory/Region/Area mapping",
+      "columns": ["ZIP","Territory","Region","Area"],
+      "primary_key": "ZIP",
+      "foreign_keys": []
+    },
+    "IQVIA_DDD": {
+      "originalName": "IQVIA-DDD",
+      "description": "Quarterly DDD (Direct Data Dispensing) data at HCO level",
+      "columns": ["HCO_ID","HCO_Name","Product","Period","Units","Territory"],
+      "primary_key": "HCO_ID",
+      "foreign_keys": ["HCO_ID"]
+    },
+    "DCR": {
+      "originalName": "DCR",
+      "description": "Data Change Requests — HCP merges, DNC updates, corrections",
+      "columns": ["Change_Date","Entity","Entity_ID","Change_Type","Details"],
+      "primary_key": "Entity_ID",
+      "foreign_keys": []
+    },
+    "t_867_Shipment": {
+      "originalName": "867_Shipment",
+      "description": "Product shipment data from distributors to HCOs",
+      "columns": ["Ship_To_ID","Shipment_Date","Product","Units","Distributor","HCO_ID","Ship_To_Name","ZIP"],
+      "primary_key": "Ship_To_ID",
+      "foreign_keys": ["HCO_ID", "ZIP"]
+    },
+    "CRM": {
+      "originalName": "CRM",
+      "description": "CRM master record — last call date, frequency, DNC flag per HCP",
+      "columns": ["CRM_ID","HCP_ID","HCP_Name","Territory","Last_Call_Date","Call_Frequency","DNC_Flag"],
+      "primary_key": "CRM_ID",
+      "foreign_keys": ["HCP_ID"]
+    },
+    "CRM_Call_History": {
+      "originalName": "CRM_Call_History",
+      "description": "Detailed rep call history — channel, message, outcome per call",
+      "columns": ["Call_ID","Call_Date","HCP_ID","HCP_Name","Territory","Region","Rep_ID","Channel","Message_Theme","Message_Depth","Call_Outcome"],
+      "primary_key": "Call_ID",
+      "foreign_keys": ["HCP_ID"]
+    },
+    "HCP_Targeting": {
+      "originalName": "HCP_Targeting",
+      "description": "HCP targeting attributes — decile, segment, target flags",
+      "columns": ["HCP_ID","HCP_Name","Territory","Region","Decile","Opportunity_Segment","Claims_Based_Potential_TRx","Claims_Target_Flag","Field_Target_Flag","Priority_HCP_Flag"],
+      "primary_key": "HCP_ID",
+      "foreign_keys": []
+    },
+    "Target_List_Refresh": {
+      "originalName": "Target_List_Refresh",
+      "description": "Target list versions and refresh dates per HCP",
+      "columns": ["HCP_ID","HCP_Name","Territory","Region","Field_Target_List_Version","Field_Target_Refresh_Date","Claims_Potential_Version","Claims_Refresh_Date","Field_Target_Flag","Claims_Target_Flag","Alignment_Status"],
+      "primary_key": "HCP_ID",
+      "foreign_keys": []
+    },
+    "Access_Barriers": {
+      "originalName": "Access_Barriers",
+      "description": "HCP access barriers by product — type, severity, status",
+      "columns": ["HCP_ID","HCP_Name","Product","Barrier_Type","Barrier_Status","Barrier_Severity","Effective_Date","Notes"],
+      "primary_key": "HCP_ID",
+      "foreign_keys": []
+    },
+    "Activity_Performance_Summary": {
+      "originalName": "Activity_Performance_Summary",
+      "description": "Quarterly performance summary — calls, TRx, engagement scores per HCP",
+      "columns": ["Quarter","Region","Territory","HCP_ID","HCP_Name","Decile","Opportunity_Segment","Field_Target_Flag","Claims_Target_Flag","Call_Count","Avg_Calls_Per_Month","Reached_Flag","TRx","Prior_Quarter_TRx","TRx_Growth_Pct","Avg_Message_Depth_Score","Avg_Engagement_Score","Access_Barrier_Flag"],
+      "primary_key": "HCP_ID",
+      "foreign_keys": []
+    },
+    "Marketing_Opt": {
+      "originalName": "Marketing Opt",
+      "description": "Marketing opt-out records — channel and campaign opt-outs",
+      "columns": ["Opt_Out_Date","HCP_ID","HCP_Name","Channel","Campaign","Action"],
+      "primary_key": "HCP_ID",
+      "foreign_keys": []
+    },
+    "Business_Rules": {
+      "originalName": "Business_Rules",
+      "description": "Business rules governing DNC, crediting, targeting policies",
+      "columns": ["Rule_ID","Policy Name","Rule Description"],
+      "primary_key": "Rule_ID",
+      "foreign_keys": []
+    }
+  },
+  "relationships": [
+    { "from": "IQVIA_OneKey.HCP_ID",   "to": "Xponent.HCP_ID",                        "type": "one-to-many" },
+    { "from": "IQVIA_OneKey.NPI",       "to": "Xponent.NPI",                           "type": "one-to-one"  },
+    { "from": "IQVIA_OneKey.HCO_ID",    "to": "IQVIA_DDD.HCO_ID",                     "type": "one-to-many" },
+    { "from": "IQVIA_OneKey.HCO_ID",    "to": "t_867_Shipment.HCO_ID",                "type": "one-to-many" },
+    { "from": "IQVIA_OneKey.HCP_ZIP",   "to": "Alignment.ZIP",                         "type": "many-to-one" },
+    { "from": "t_867_Shipment.ZIP",     "to": "Alignment.ZIP",                         "type": "many-to-one" },
+    { "from": "CRM.HCP_ID",             "to": "CRM_Call_History.HCP_ID",               "type": "one-to-many" },
+    { "from": "CRM.HCP_ID",             "to": "HCP_Targeting.HCP_ID",                  "type": "one-to-one"  },
+    { "from": "HCP_Targeting.HCP_ID",   "to": "Activity_Performance_Summary.HCP_ID",   "type": "one-to-many" },
+    { "from": "IQVIA_OneKey.HCP_ID",    "to": "Access_Barriers.HCP_ID",               "type": "one-to-many" },
+    { "from": "IQVIA_OneKey.HCP_ID",    "to": "Marketing_Opt.HCP_ID",                 "type": "one-to-many" },
+    { "from": "IQVIA_OneKey.HCP_ID",    "to": "Target_List_Refresh.HCP_ID",           "type": "one-to-one"  }
+  ],
+  "join_hints": {
+    "primary_join_key": "HCP_ID",
+    "notes": [
+      "Most tables join via HCP_ID (primary key across the dataset)",
+      "IQVIA_OneKey.HCO_ID → IQVIA_DDD.HCO_ID → t_867_Shipment.HCO_ID",
+      "Xponent.NPI → IQVIA_OneKey.NPI",
+      "Alignment.ZIP → IQVIA_OneKey.HCP_ZIP or t_867_Shipment.ZIP",
+      "CRM.HCP_ID = CRM_Call_History.HCP_ID = HCP_Targeting.HCP_ID = Activity_Performance_Summary.HCP_ID"
+    ]
+  },
+  "sample_queries": [
+    "Show me all active HCPs and their specialties",
+    "Which HCPs are high priority targets in the Northeast?",
+    "Show TRx growth for all HCPs in Q1 2026",
+    "Which HCPs have access barriers for Biktarvy?",
+    "Join targeting and performance data for HCP_66219",
+    "What are the business rules around DNC policy?",
+    "Show call history with outcomes for BOS-03 territory",
+    "Which HCPs have digital DNC flags set?"
+  ]
+}
